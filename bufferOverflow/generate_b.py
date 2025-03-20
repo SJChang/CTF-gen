@@ -1,76 +1,81 @@
-import re
+import os
+import anthropic
 
-# Function to extract key components from a C file
-def extract_components(file_path):
+ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
+
+if not ANTHROPIC_API_KEY:
+    raise ValueError("Anthropic API key not found in environment variables.")
+
+# Files in the same directory
+directory_path = os.path.dirname(os.path.abspath(__file__))
+
+# All learning file is named as vuln(i).c
+base_file_name = 'vuln'
+output_file = 'vuln_all.c'
+output_file_path = os.path.join(directory_path, output_file)
+
+# Initialise an empty string to store combined content
+combined_content = ""
+
+# Loop through files in the directory
+i = 0
+while True:
+    if i == 0:
+        file_name = f"{base_file_name}.c"  # vuln.c
+    else:
+        file_name = f"{base_file_name}({i}).c"  # vuln(1).c, vuln(2).c, etc.
+
+    file_path = os.path.join(directory_path, file_name)
+
+    if not os.path.exists(file_path):
+        break  # Exit the loop if the file doesn't exist
+
+    # Read the contents of the file
     with open(file_path, 'r') as f:
-        content = f.read()
+        file_content = f.read()
 
-    # Extract functions
-    functions = re.findall(r"(\w+)\s*\([^)]*\)\s*\{[^}]+\}", content, re.DOTALL)
+    # Append the file content to the combined content
+    combined_content += f"File: {file_name}\n{file_content}\n\n"
 
-    # Extract buffer declarations
-    buffers = re.findall(r"char\s+\w+\s*\[\d+\];", content)
+    # Increment the counter
+    i += 1
 
-    # Extract conditional checks (e.g., strcmp)
-    conditions = re.findall(r"if\s*\([^)]+\)\s*\{[^}]+\}", content, re.DOTALL)
+# Check if any files were found
+if not combined_content:
+    raise FileNotFoundError(f"No files matching '{base_file_name}*.c' found in the directory.")
 
-    # Extract main function
-    main_function = re.search(r"int\s+main\s*\([^)]*\)\s*\{[^}]+\}", content, re.DOTALL)
-    if main_function:
-        main_function = main_function.group(0)
+# Initialize the Anthropic client
+client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 
-    return {
-        "functions": functions,
-        "buffers": buffers,
-        "conditions": conditions,
-        "main_function": main_function,
-    }
+# Define the prompt for the LLM
+prompt = f"""
+You are an expert in cybersecurity and CTF challenges. Below are multiple C code files that contain CTF-style buffer overflow challenges:
 
-# Function to generate b.c based on learned components
-def generate_b_c(b1_components, b2_components):
-    # Combine components from b1.c and b2.c
-    combined_functions = list(set(b1_components["functions"] + b2_components["functions"]))
-    combined_buffers = list(set(b1_components["buffers"] + b2_components["buffers"]))
-    combined_conditions = list(set(b1_components["conditions"] + b2_components["conditions"]))
-    main_function = b2_components["main_function"]  # Use main function from b2.c
+{combined_content}
 
-    # Generate b.c content
-    b_c_content = """
-#include <stdio.h>
-#include <string.h>
-// gcc -no-pie -fno-stack-protector -g -o b b.c
+Analyze these files to understand their purpose, structure, and the type of buffer overflow vulnerabilities they demonstrate. Then, generate a new, similar buffer overflow challenge in C code. The new challenge should:
+1. Be of the same type (e.g., stack-based buffer overflow).
+2. Include a vulnerability that is realistic and exploitable.
+3. Include comments explaining the vulnerability and how it can be exploited.
+4. Be saved in a single file named "vuln_all.c".
 
+Provide only the C code for the new challenge, without any additional explanation or text.
 """
 
-    # Add functions
-    for func in combined_functions:
-        b_c_content += func + "\n\n"
 
-    # Add main function
-    b_c_content += main_function + "\n"
+response = client.messages.create(
+    model="claude-3-opus-20240229", 
+    max_tokens=4000, 
+    messages=[
+        {"role": "user", "content": prompt}
+    ]
+)
 
-    return b_c_content
+# Extract the generated content from the response
+generated_content = response.content[0].text
 
-# Save the generated b.c to a file
-def save_b_c(content, output_path):
-    with open(output_path, 'w') as f:
-        f.write(content)
 
-# Main function
-if __name__ == "__main__":
-    # Paths to the input files
-    b1_path = "b1.c"
-    b2_path = "b2.c"
-    output_path = "b.c"
+with open(output_file_path, 'w') as output_f:
+    output_f.write(generated_content)
 
-    # Extract components from b1.c and b2.c
-    b1_components = extract_components(b1_path)
-    b2_components = extract_components(b2_path)
-
-    # Generate b.c
-    b_c_content = generate_b_c(b1_components, b2_components)
-
-    # Save the generated b.c
-    save_b_c(b_c_content, output_path)
-
-    print(f"Generated {output_path} successfully!")
+print(f"New buffer overflow challenge has been generated and saved to '{output_file}'.")
