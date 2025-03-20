@@ -1,0 +1,22 @@
+'''
+Observations from chall0.c and chall1.c
+Common Structure:
+
+Both files have a similar structure, including init, print_menu, write_buffer, print_heap, and check_win functions.
+
+Both use heap memory allocation for input_data and safe_var.
+
+Both have a menu-driven interface for user interaction.
+
+Differences:
+
+chall0.c checks if safe_var is not equal to "bico" to trigger the win condition.
+
+chall1.c checks if safe_var is equal to "pico" to trigger the win condition.
+
+The initialization strings for input_data and safe_var are the same in both files ("pico" and "bico", respectively).
+
+Vulnerability:
+
+Both files are vulnerable to a buffer overflow in the write_buffer function, where scanf("%s", input_data) does not limit the input size.
+'''
