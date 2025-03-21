@@ -6,15 +6,19 @@ ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
 if not ANTHROPIC_API_KEY:
     raise ValueError("Anthropic API key not found in environment variables.")
 
-
+# Files in the same directory
 directory_path = os.path.dirname(os.path.abspath(__file__))
 
-
+# All message files are named as message(i).txt
 base_file_name = 'message'
-output_file = 'message_all.txt'
-output_file_path = os.path.join(directory_path, output_file)
+output_folder = 'new code'
+output_folder_path = os.path.join(directory_path, output_folder)
 
-# Initialise
+# Create the 'new code' folder if it doesn't exist
+if not os.path.exists(output_folder_path):
+    os.makedirs(output_folder_path)
+
+# Initialise an empty string to store combined content
 combined_content = ""
 
 # Loop through files in the directory
@@ -40,10 +44,11 @@ while True:
 
     i += 1
 
+# Check if any files were found
 if not combined_content:
     raise FileNotFoundError(f"No files matching '{base_file_name}*.txt' found in the directory.")
 
-# Initialise
+# Initialize the Anthropic client
 client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 
 # Define the prompt for the LLM
@@ -72,8 +77,22 @@ response = client.messages.create(
 # Extract the generated content from the response
 generated_content = response.content[0].text
 
+# Remove unwanted text if present
+unwanted_text = "Here is the content for the new challenge file message_all.txt:"
+if generated_content.startswith(unwanted_text):
+    generated_content = generated_content[len(unwanted_text):].strip()
+
+# Determine the new file name
+i = 1
+while True:
+    new_file_name = f"msg_new_{i}.txt"
+    new_file_path = os.path.join(output_folder_path, new_file_name)
+    if not os.path.exists(new_file_path):
+        break
+    i += 1
+
 # Write the generated content to the new file
-with open(output_file_path, 'w') as output_f:
+with open(new_file_path, 'w') as output_f:
     output_f.write(generated_content)
 
-print(f"New cryptographic challenge has been generated and saved to '{output_file}'.")
+print(f"New cryptographic challenge has been generated and saved to '{new_file_path}'.")

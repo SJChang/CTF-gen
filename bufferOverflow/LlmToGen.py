@@ -11,8 +11,12 @@ directory_path = os.path.dirname(os.path.abspath(__file__))
 
 # All learning file is named as vuln(i).c
 base_file_name = 'vuln'
-output_file = 'vuln_all.c'
-output_file_path = os.path.join(directory_path, output_file)
+output_folder = 'new code'
+output_folder_path = os.path.join(directory_path, output_folder)
+
+# Create the 'new code' folder if it doesn't exist
+if not os.path.exists(output_folder_path):
+    os.makedirs(output_folder_path)
 
 # Initialise an empty string to store combined content
 combined_content = ""
@@ -62,7 +66,6 @@ Analyze these files to understand their purpose, structure, and the type of buff
 Provide only the C code for the new challenge, without any additional explanation or text.
 """
 
-
 response = client.messages.create(
     model="claude-3-opus-20240229", 
     max_tokens=4000, 
@@ -74,8 +77,17 @@ response = client.messages.create(
 # Extract the generated content from the response
 generated_content = response.content[0].text
 
+# Determine the new file name
+i = 1
+while True:
+    new_file_name = f"vuln_new_{i}.c"
+    new_file_path = os.path.join(output_folder_path, new_file_name)
+    if not os.path.exists(new_file_path):
+        break
+    i += 1
 
-with open(output_file_path, 'w') as output_f:
+# Write the generated content to the new file
+with open(new_file_path, 'w') as output_f:
     output_f.write(generated_content)
 
-print(f"New buffer overflow challenge has been generated and saved to '{output_file}'.")
+print(f"New buffer overflow challenge has been generated and saved to '{new_file_path}'.")
