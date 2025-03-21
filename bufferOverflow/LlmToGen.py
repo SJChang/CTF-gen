@@ -9,6 +9,10 @@ if not ANTHROPIC_API_KEY:
 # Files in the same directory
 directory_path = os.path.dirname(os.path.abspath(__file__))
 
+# Define the sample folder
+sample_folder = 'sample'
+sample_folder_path = os.path.join(directory_path, sample_folder)
+
 # All learning file is named as vuln(i).c
 base_file_name = 'vuln'
 output_folder = 'new code'
@@ -21,7 +25,7 @@ if not os.path.exists(output_folder_path):
 # Initialise an empty string to store combined content
 combined_content = ""
 
-# Loop through files in the directory
+# Loop through files in the sample folder
 i = 0
 while True:
     if i == 0:
@@ -29,7 +33,7 @@ while True:
     else:
         file_name = f"{base_file_name}({i}).c"  # vuln(1).c, vuln(2).c, etc.
 
-    file_path = os.path.join(directory_path, file_name)
+    file_path = os.path.join(sample_folder_path, file_name)
 
     if not os.path.exists(file_path):
         break  # Exit the loop if the file doesn't exist
@@ -46,7 +50,7 @@ while True:
 
 # Check if any files were found
 if not combined_content:
-    raise FileNotFoundError(f"No files matching '{base_file_name}*.c' found in the directory.")
+    raise FileNotFoundError(f"No files matching '{base_file_name}*.c' found in the '{sample_folder}' folder.")
 
 # Initialize the Anthropic client
 client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
