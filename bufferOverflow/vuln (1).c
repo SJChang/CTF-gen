@@ -8,6 +8,7 @@
 #define BUFSIZE 32
 #define FLAGSIZE 64
 
+//Manipulate the return address to cover to the win()
 void win() {
   char buf[FLAGSIZE];
   FILE *f = fopen("flag.txt","r");

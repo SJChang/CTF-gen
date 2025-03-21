@@ -10,6 +10,7 @@
 #define FLAGSIZE 64
 #define CANARY_SIZE 4
 
+// Get global_canary value  |     buf [64]    |   global_canary [4]    |   ...   |    EIP   | ....
 void win() {
   char buf[FLAGSIZE];
   FILE *f = fopen("flag.txt","r");

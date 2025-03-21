@@ -4,6 +4,8 @@
 #include <unistd.h>
 #include <sys/types.h>
 
+
+// Two parameters are required to win and to manipulate the offset of EIP
 #define BUFSIZE 100
 #define FLAGSIZE 64
 
