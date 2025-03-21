@@ -6,7 +6,6 @@ ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
 if not ANTHROPIC_API_KEY:
     raise ValueError("Anthropic API key not found in environment variables.")
 
-# Files in the same directory
 directory_path = os.path.dirname(os.path.abspath(__file__))
 
 # Define the sample folder
@@ -45,14 +44,11 @@ while True:
     # Append the file content to the combined content
     combined_content += f"File: {file_name}\n{file_content}\n\n"
 
-    # Increment the counter
     i += 1
 
-# Check if any files were found
 if not combined_content:
     raise FileNotFoundError(f"No files matching '{base_file_name}*.c' found in the '{sample_folder}' folder.")
 
-# Initialize the Anthropic client
 client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 
 # Define the prompt for the LLM
